@@ -53,6 +53,7 @@
         <While condition="true">
             <Set path="/end_time" value="${time()}" />
             <FormatDate pattern="${/time_format}" timeZone="${/time_zone}" time="${/end_time}" savePath="/end_time" />
+
             <Set path="/start_time" value="${/bookmark}" />
             <FormatDate pattern="${/time_format}" timeZone="${/time_zone}" time="${/start_time}" savePath="/start_time" />
 
@@ -63,6 +64,8 @@
                 <!-- <SSLConfiguration allowUntrustedServerCertificate="true" /> -->
                 <BearerAuthentication token="${/bearer_token}" />
                 <QueryParameter name="sysparm_limit" value="${/events_per_fetch}" />
+                <QueryParameter name="sysparm_display_value" value="true
+                " />
                 <QueryParameter name="sysparm_query" value="${/pagination_time_field}BETWEENjavascript:gs.dateGenerate('${/start_time}')@javascript:gs.dateGenerate('${/end_time}')^ORDERBY${/pagination_time_field}" />
             </CallEndpoint>
 
@@ -83,19 +86,28 @@
                     <Log type="INFO" message="[ServiceNow]: New last updated time: ${/events[${/last_index}]/${/pagination_time_field}}" />
 
                     <ParseDate pattern="${/time_format}" timeZone="${/time_zone}" date="${/events[${/last_index}]/${/pagination_time_field}}" savePath="/last_bookmark" />
-                    <FormatDate pattern="${/time_format}" timeZone="${/time_zone}" time="${/last_bookmark}" savePath="/bookmark" />
-                    <ParseDate pattern="${/time_format}" timeZone="${/time_zone}" date="${/bookmark}" savePath="/bookmark" />
+                    <FormatDate pattern="${/time_format}" timeZone="${/time_zone}" time="${/last_bookmark}" savePath="/bookmark" /> 
+                    <ParseDate pattern="${/time_format}" timeZone="${/time_zone}" date="${/bookmark}" savePath="/bookmark" /> 
 
+                    <!-- <Set path="/bookmark" value="${/bookmark + 10800000}"/> -->
                     <Log type="INFO" message="[ServiceNow]: '${/pagination_time_field}' time for '${/table_to_fetch}' updated to: ${/bookmark}" />
+                
+                    <Log type="INFO" message="[ServiceNow]: Done fetch period" />
+
+                    <If condition="${/events_per_fetch} > ${/events_count}">
+                        <Log type="INFO" message="[ServiceNow]: Connecter is in sync with ServiceNow server, reseting fetch counter and going to sleep for ${/sleep_time_in_seconds} seconds..." />
+                        <Set path="/fetch_counter" value="1" />
+
+                        <Set path="/bookmark" value="${/bookmark + 1000}"/>
+                        <Log type="INFO" message="[ServiceNow]: Add 1 second to bookmark. Updated to: ${/bookmark}" />
+                        <Sleep duration="${/sleep_time}" />
+                    </If>
                 </If>
-
-                <Log type="INFO" message="[ServiceNow]: Done fetch period" />
-
-                <If condition="${/events_per_fetch} > ${/events_count}">
+                <Else> 
                     <Log type="INFO" message="[ServiceNow]: Connecter is in sync with ServiceNow server, reseting fetch counter and going to sleep for ${/sleep_time_in_seconds} seconds..." />
                     <Set path="/fetch_counter" value="1" />
                     <Sleep duration="${/sleep_time}" />
-                </If>
+                </Else>
             </If>
             <ElseIf condition="/response/status_code = 401">
                 <!-- If the bearer token has expired fetch a new one.  -->
