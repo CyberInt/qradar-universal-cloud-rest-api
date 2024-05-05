@@ -19,7 +19,8 @@
         <Set path="/fetch_counter" value="1" />
         <Set path="/events_count" value="0" />
         <Set path="/sleep_time" value="${/sleep_time_in_seconds * 1000}"/>
-        <Initialize path="/time_format" value="yyyy-MM-dd HH:mm:ss" />
+        <Initialize path="/time_format" value="dd/MM/yyyy HH:mm:ss" />
+        <Initialize path="/time_format_sn" value="yyyy-MM-dd HH:mm:ss" />
 
         <!-- Initialize the last updated time filter for the first run. -->
         <Initialize path="/bookmark" value="${time() - /initial_fetch_period * 86400 * 1000}" />
@@ -52,10 +53,10 @@
         <!-- Pagination handling: aslong as events are returned, keep fetching data. -->
         <While condition="true">
             <Set path="/end_time" value="${time()}" />
-            <FormatDate pattern="${/time_format}" timeZone="${/time_zone}" time="${/end_time}" savePath="/end_time" />
+            <FormatDate pattern="${/time_format_sn}" timeZone="${/time_zone}" time="${/end_time}" savePath="/end_time" />
 
             <Set path="/start_time" value="${/bookmark}" />
-            <FormatDate pattern="${/time_format}" timeZone="${/time_zone}" time="${/start_time}" savePath="/start_time" />
+            <FormatDate pattern="${/time_format_sn}" timeZone="${/time_zone}" time="${/start_time}" savePath="/start_time" />
 
             <Log type="INFO" message="[ServiceNow]: Running fetch number ${/fetch_counter} for '${/table_to_fetch}'. Start time: '${/start_time}', End time: '${/end_time}'." />
 
